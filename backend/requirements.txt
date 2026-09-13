@@ -1,0 +1,25 @@
+# ── Core framework ──────────────────────────────────────────────────
+fastapi
+uvicorn[standard]
+pydantic
+pydantic-settings
+python-dotenv
+
+# ── LangChain ecosystem ─────────────────────────────────────────────
+langchain
+langchain-core
+langchain-groq
+langchain-google-genai
+langchain-openai
+langchain-community
+
+# ── Tools ───────────────────────────────────────────────────────────
+httpx
+sympy
+
+# ── Vector store (optional prod adapter) ────────────────────────────
+psycopg[binary]
+
+# ── Dev / test ──────────────────────────────────────────────────────
+pytest
+ruff

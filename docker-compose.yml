@@ -1,0 +1,39 @@
+services:
+  backend:
+    build:
+      context: ./backend
+    container_name: intellireason-backend
+    env_file:
+      - .env
+    environment:
+      GROQ_API_KEY: ${GROQ_API_KEY:-}
+      GOOGLE_API_KEY: ${GOOGLE_API_KEY:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      DATABASE_URL: ${DATABASE_URL:-}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173,http://localhost:3000}
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend/app:/app/app
+      - ./backend/knowledge_docs:/app/knowledge_docs
+      - vs_data:/app/.vector-store
+    restart: unless-stopped
+
+  # Optional: local Postgres + pgvector for the pgvector vector-store mode.
+  # Enable with:  docker compose --profile pgvector up
+  pgvector:
+    image: pgvector/pgvector:pg16
+    profiles: ["pgvector"]
+    container_name: intellireason-pgvector
+    environment:
+      POSTGRES_USER: intellireason
+      POSTGRES_PASSWORD: intellireason
+      POSTGRES_DB: intellireason
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+
+volumes:
+  vs_data:
+  pg_data:

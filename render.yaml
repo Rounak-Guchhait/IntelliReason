@@ -1,0 +1,49 @@
+# Render Blueprint — deploys both services from this repo.
+# Push this repo to GitHub, then in Render Dashboard:
+#   New -> Blueprint -> select repo -> the services below are auto-created.
+# Fill in the secret env vars (sync: false) in the Render dashboard.
+
+services:
+  # ── Backend: FastAPI + LangChain reasoning engine ──────────────────
+  - type: web
+    name: intellireason-api
+    runtime: python
+    rootDir: backend
+    plan: free # upgrade to starter (~$7/mo) to avoid cold starts
+    healthCheckPath: /api/health
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: GROQ_API_KEY
+        sync: false
+      - key: GOOGLE_API_KEY
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: LLM_PROVIDER
+        value: groq
+      - key: LLM_MODEL
+        value: llama-3.3-70b-versatile
+      - key: LLM_TEMPERATURE
+        value: "0.2"
+      - key: VECTOR_STORE
+        value: memory
+      - key: CODE_ENGINE
+        value: piston
+      # After the frontend is deployed, set this to the frontend's URL,
+      # e.g. https://intellireason.onrender.com or a custom domain:
+      - key: CORS_ORIGINS
+        value: https://intellireason-frontend.onrender.com
+
+  # ── Frontend: React (Vite) static site ─────────────────────────────
+  - type: web
+    name: intellireason-frontend
+    runtime: static
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: ./dist
+    envVars:
+      # Must point at the deployed backend URL
+      # (https://intellireason-api.onrender.com after it exists).
+      - key: VITE_API_URL
+        value: https://intellireason-api.onrender.com

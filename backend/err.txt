@@ -1,0 +1,74 @@
+INFO:     Started server process [26668]
+INFO:     Waiting for application startup.
+2026-09-13 13:50:09,590 INFO intellireason: IntelliReason up | provider=groq model=llama-3.3-70b-versatile vector_store=memory
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
+2026-09-13 13:51:48,397 INFO httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 404 Not Found"
+2026-09-13 13:51:48,451 INFO httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 404 Not Found"
+2026-09-13 13:51:48,457 WARNING app.reasoning.engine: Planning failed: Error code: 404 - {'error': {'message': 'The model `llama-3.3-70b-versatile` does not exist or you do not have access to it.', 'type': 'invalid_request_error', 'code': 'model_not_found'}}
+2026-09-13 13:51:48,519 INFO httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 404 Not Found"
+2026-09-13 13:51:48,568 INFO httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 404 Not Found"
+2026-09-13 13:51:48,570 ERROR app.api.routes: Reasoning failed
+Traceback (most recent call last):
+  File "C:\Users\rouna\OneDrive\Documents\Projects\IntelliReason An AI-Powered Smart Reasoning System\backend\app\api\routes.py", line 54, in reason
+    return get_engine().reason(
+           ~~~~~~~~~~~~~~~~~~~^
+        request.question, history=[m.model_dump() for m in request.history]
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\rouna\OneDrive\Documents\Projects\IntelliReason An AI-Powered Smart Reasoning System\backend\app\reasoning\engine.py", line 99, in reason
+    verification = self._verify(question, steps_out, hist_text)
+  File "C:\Users\rouna\OneDrive\Documents\Projects\IntelliReason An AI-Powered Smart Reasoning System\backend\app\reasoning\engine.py", line 156, in _verify
+    verifier = invoke_structured(
+        self.llm,
+        VerificationSchema,
+        [SystemMessage(VERIFIER_SYSTEM_PROMPT), HumanMessage(block)],
+    )
+  File "C:\Users\rouna\OneDrive\Documents\Projects\IntelliReason An AI-Powered Smart Reasoning System\backend\app\llm\structured.py", line 35, in invoke_structured
+    response = model.invoke(messages)
+  File "C:\Users\rouna\OneDrive\Documents\Projects\IntelliReason An AI-Powered Smart Reasoning System\backend\.venv\Lib\site-packages\langchain_core\language_models\chat_models.py", line 488, in invoke
+    self.generate_prompt(
+    ~~~~~~~~~~~~~~~~~~~~^
+        [self._convert_input(input)],
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<6 lines>...
+        **kwargs,
+        ^^^^^^^^^
+    ).generations[0][0],
+    ^
+  File "C:\Users\rouna\OneDrive\Documents\Projects\IntelliReason An AI-Powered Smart Reasoning System\backend\.venv\Lib\site-packages\langchain_core\language_models\chat_models.py", line 1877, in generate_prompt
+    return self.generate(prompt_messages, stop=stop, callbacks=callbacks, **kwargs)
+           ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\rouna\OneDrive\Documents\Projects\IntelliReason An AI-Powered Smart Reasoning System\backend\.venv\Lib\site-packages\langchain_core\language_models\chat_models.py", line 1684, in generate
+    self._generate_with_cache(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^
+        m,
+        ^^
+    ...<2 lines>...
+        **kwargs,
+        ^^^^^^^^^
+    )
+    ^
+  File "C:\Users\rouna\OneDrive\Documents\Projects\IntelliReason An AI-Powered Smart Reasoning System\backend\.venv\Lib\site-packages\langchain_core\language_models\chat_models.py", line 2022, in _generate_with_cache
+    result = self._generate(
+        messages, stop=stop, run_manager=run_manager, **kwargs
+    )
+  File "C:\Users\rouna\OneDrive\Documents\Projects\IntelliReason An AI-Powered Smart Reasoning System\backend\.venv\Lib\site-packages\langchain_groq\chat_models.py", line 627, in _generate
+    response = self.client.create(messages=message_dicts, **params)
+  File "C:\Users\rouna\OneDrive\Documents\Projects\IntelliReason An AI-Powered Smart Reasoning System\backend\.venv\Lib\site-packages\groq\resources\chat\completions.py", line 461, in create
+    return self._post(
+           ~~~~~~~~~~^
+        "/openai/v1/chat/completions",
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<45 lines>...
+        stream_cls=Stream[ChatCompletionChunk],
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\rouna\OneDrive\Documents\Projects\IntelliReason An AI-Powered Smart Reasoning System\backend\.venv\Lib\site-packages\groq\_base_client.py", line 1242, in post
+    return cast(ResponseT, self.request(cast_to, opts, stream=stream, stream_cls=stream_cls))
+                           ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\rouna\OneDrive\Documents\Projects\IntelliReason An AI-Powered Smart Reasoning System\backend\.venv\Lib\site-packages\groq\_base_client.py", line 1044, in request
+    raise self._make_status_error_from_response(err.response) from None
+groq.NotFoundError: Error code: 404 - {'error': {'message': 'The model `llama-3.3-70b-versatile` does not exist or you do not have access to it.', 'type': 'invalid_request_error', 'code': 'model_not_found'}}
