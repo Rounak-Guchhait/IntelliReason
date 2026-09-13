@@ -1,79 +1,101 @@
-# IntelliReason — An AI-Powered Smart Reasoning System
+IntelliReason
+An AI-powered smart reasoning engine that plans, solves, verifies and explains — step by step, with tools, streaming live.
 
-IntelliReason takes a question that needs real reasoning and **doesn’t just answer it** — it
-*plans*, *solves step-by-step with tools*, *verifies* the result, and *explains* exactly how it
-got there. Think "show your work," enforced.
+🎯 Live Demo
+Try it now — no account needed beyond a free Groq key:
 
-## How it works
+http://localhost:8000
 
-1. **Decompose** — a Planner LLM breaks your problem into a few ordered, self-contained steps.
-2. **Solve** — a LangChain ReAct agent solves each step, calling tools as needed.
-3. **Verify** — a Verifier LLM checks every step and the final conclusion.
-4. **Synthesize** — a Finalizer combines verified steps into one answer + a readable explanation.
+Note: start the backend first (see Getting Started), then open the URL. Reasoning phases stream in real time.
 
-Progress streams back to the UI as Server-Sent Events, so you watch the reasoning tree grow live.
+Features
+🗺️ Plan - Decomposes your question into a clear, ordered set of logical steps before solving anything
+🧩 Solve - Each step is worked through with a ReAct agent that actually calls tools (Piston sandbox for Python, SymPy for symbolic math)
+✅ Verify - Every step and the final conclusion are re-checked by a verifier model with an explicit verdict
+🧠 Synthesize - Verified steps are woven into one readable, final explanation
+⚡ Live Streaming - SSE stream shows planning → solving → verifying → synthesizing in real time, like watching it think
+🔁 Provider-Agnostic - Same engine on Groq (default, free), OpenAI, Google Gemini, or any OpenAI-compatible API
+🗄️ Knowledge Base - Retrieves relevant facts from an in-memory vector store (pgvector on Render)
+🐳 Deploy Ready - Dockerfile, docker-compose, and Render blueprint included
 
-## Stack
+Technology Stack
+Python 3.12+
+FastAPI - Async web framework with SSE streaming
+LangChain 1.x - Agent orchestration (planner, solver, verifier agents)
+Groq - Lightning-fast free LLM inference (llama-3.3-70b versatile, live-tested)
+SymPy - Symbolic math tool
+Piston - Remote sandbox for executing user code
+Scikit-learn - Intent classification foundation
+React + Vite - Interactive chat UI
+Render / Docker - One-click deploy
 
-| Layer | Choice |
-|---|---|
-| LLM | Provider-agnostic — Groq / Google Gemini / OpenAI / OpenAI-compatible (config-swappable) |
-| Agent framework | LangChain `create_agent` + ReAct |
-| Reasoning | Chain-of-Thought decomposition + verify loop |
-| Tools | Piston remote Python sandbox, SymPy symbolic math, knowledge-store retrieval |
-| Backend | FastAPI |
-| Frontend | React + Vite |
-| Vector store | In-memory (dev) ↔ pgvector (prod) |
-| Deploy | Docker locally; Render (backend) + Vercel/Netlify (frontend) |
+Project Structure
+IntelliReason/
+├── backend/
+│   ├── app/
+│   │   ├── main.py            # FastAPI app + SSE routes
+│   │   ├── api/               # /api/health, /api/reason, /api/stream-reason
+│   │   ├── reasoning/         # engine.py: plan → solve → verify → synthesize
+│   │   ├── agents/            # planner / solver / verifier LangGraph agents
+│   │   ├── tools/             # code_exec (Piston), symbolic_math (SymPy), retrieval
+│   │   ├── vectorstore/       # in-memory store (memory) + pgvector adapter
+│   │   └── config.py          # single source of truth for .env
+│   ├── requirements.txt       # + requirements.lock.txt (pinned)
+│   ├── Dockerfile             # containerized backend
+│   └── .env.example           # copy to .env, add your GROQ_API_KEY
+├── frontend/
+│   ├── src/                   # React app (App.jsx, components/, api/client.js)
+│   ├── vite.config.js
+│   └── package.json
+├── render.yaml                # Render blueprint (backend + frontend)
+├── docker-compose.yml
+├── RUN.md                     # full run + deploy instructions
+└── README.md
 
-## Quick start (backend)
+Getting Started
+Prerequisites: Python 3.11+, git (Node.js only if you run the React UI).
 
-```powershell
-cd backend
-py -m venv .venv
-.\.venv\Scripts\Activate.ps1
-pip install -r requirements.txt
-# copy .env.example -> .env, fill GROQ_API_KEY (free: console.groq.com)
-uvicorn app.main:app --reload
-```
+Setup & Run
+1. Clone the repository
+  git clone <your-repo-url>
+  cd IntelliReason
 
-Then open http://localhost:8000/docs (API) and http://localhost:8000/api/health.
+2. Start the backend
+  cd backend
+  py -m venv .venv
+  .\.venv\Scripts\Activate.ps1
+  pip install -r requirements.txt
+  copy .env.example .env     # then add GROQ_API_KEY=gsk_... in .env
+  uvicorn app.main:app --reload --port 8000
 
-### Providers (pick one in `.env`)
-| Provider | Free key | Model |
-|---|---|---|
-| `groq` | console.groq.com | `llama-3.3-70b-versatile` |
-| `google` | aistudio.google.com | `gemini-2.0-flash` |
-| `openai` | platform.openai.com | `gpt-4o-mini` |
-| `openai_compatible` | Ollama etc. | your own |
+3. Verify it's alive
+  Open http://localhost:8000/api/health  → {"status":"ok","app":"IntelliReason",...}
 
-## API
+Usage Example
+Open http://localhost:8000/docs and POST /api/reason with:
 
-- `GET  /api/health` — status + active model
-- `POST /api/stream-reason` — SSE stream: planning → steps → verification → done
-- `POST /api/reason` — one-shot (non-stream) JSON result
+{ "question": "Solve x^2 - 5x + 6 = 0 step by step and verify the roots" }
 
-### Piston sandbox (free, remote)
-Code execution tool calls https://emkc.org/api/v2/piston — no local sandbox required.
-Set `CODE_ENGINE=judge0` to use Judge0 instead (free tier). No key stored locally.
+You:  What is 12 × 12, worked out?
+Steps:
+  [1] Split: compute 12 × 12 and verify
+  [2] Tool (python): 12 * 12  →  144
+  [3] Verify: product correct (two-digit check)
+Final answer: 144 · Verdict: correct ✓
 
-## Frontend
+How It Works
+1. Decompose - The planner turns your question into ordered sub-steps.
+2. Solve - A ReAct agent solves each step, calling Python (Piston) or SymPy where needed.
+3. Verify - A verifier re-checks each step and the final conclusion, returning a verdict.
+4. Synthesize - Steps and checks are combined into a single clear explanation.
+The whole pipeline streams to the UI as server-sent events — planning → solving → verifying → synthesizing — so you watch each phase live.
 
-Requires Node 18+. See `frontend/README.md`.
+Notes
+- Uses Groq by default (free, no credit card). To switch providers, set LLM_PROVIDER=openai and add OPENAI_API_KEY in .env — no code changes.
+- API key lives only in backend/.env, which is gitignored and never committed.
+- Knowledge base stores facts in-memory for dev; swap to pgvector on Render via VECTOR_STORE=pgvector.
+- 9 backend tests pass (pytest) and lint is clean (ruff).
 
-## Deploy
-
-- **Render blueprint** (`render.yaml`): deploy backend in one click; set `GROQ_API_KEY`.
-- **Frontend**: `npm run build` → deploy `dist/` to Vercel or Netlify; set
-  `VITE_API_URL` to your Render URL.
-- **Docker**: `docker compose up` for a local full-stack environment.
-
-## Tests
-
-```powershell
-cd backend; pytest -q
-```
-
-## Deeper reading
-
-See `docs/DESIGN.md` for architecture, and `docs/TECHNOTES.md` for the reasoning-loop detail.
+Author
+Rounak Guchhait
+https://github.com/Rounak-Guchhait/IntelliReason
