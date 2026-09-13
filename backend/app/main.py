@@ -53,8 +53,18 @@ app.add_middleware(
 app.include_router(api_router, prefix="/api")
 
 
-@app.get("/", tags=["meta"])
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+from pathlib import Path
+
+_FRONTEND_DIST = Path(__file__).resolve().parents[2] / "frontend" / "dist"
+
+
+@app.get("/", tags=["meta"], include_in_schema=False)
 def root():
+    index = _FRONTEND_DIST / "index.html"
+    if index.is_file():
+        return FileResponse(index)
     return {
         "name": settings.app_name,
         "docs": "/docs",
@@ -62,3 +72,6 @@ def root():
         "reason": "/api/reason",
         "stream": "/api/stream-reason",
     }
+
+if _FRONTEND_DIST.is_dir():
+    app.mount("/assets", StaticFiles(directory=_FRONTEND_DIST / "assets"), name="frontend-assets")
